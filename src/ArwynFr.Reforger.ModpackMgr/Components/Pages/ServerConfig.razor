@@ -1,0 +1,36 @@
+@page "/server"
+
+@using System.Text.Json
+@using ArwynFr.Reforger.ModpackMgr.Database
+@using ArwynFr.Reforger.ModpackMgr.Domain
+@using ArwynFr.Reforger.ModpackMgr.Workshop
+
+@inject WorkshopItemRepository WorkshopItemRepository
+@inject ModsDbContext ModsDbContext
+
+@if (errorMessage is not "")
+{
+  <p class="alert alert-danger">
+    @errorMessage
+  </p>
+}
+
+<pre class="text-wrap">
+  @serverJson
+</pre>
+
+@code
+{
+  [Parameter] public List<Mod> Mods { get; set; } = [];
+  [Parameter] public EventCallback<List<Mod>> ModsChanged { get; set; }
+
+  private string serverJson = string.Empty;
+  private string errorMessage = string.Empty;
+
+  protected override async Task OnInitializedAsync()
+  {
+    serverJson = JsonSerializer.Serialize(
+      await ServerConfigJsonEndpoint.GetServerConfiguration(ModsDbContext, WorkshopItemRepository, CancellationToken.None)
+    );
+  }
+}

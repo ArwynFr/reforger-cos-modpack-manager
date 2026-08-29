@@ -1,0 +1,60 @@
+@using ArwynFr.Reforger.ModpackMgr.Domain
+
+@inject WorkshopAdapter WorkshopAdapter
+
+<input type="text" class="form-control my-3" placeholder="Ajouter ..." @bind="value" @oninput="HandleInput"
+       @onblur="HideResultsWithDelay" />
+
+@if (results.Any())
+{
+    <ul class="dropdown-menu show w-100 h-50 shadow-sm z-3 mt-1 py-0 overflow-hidden">
+        @foreach (var mod in results)
+        {
+            <li>
+                <button type="button" class="dropdown-item py-2 border-bottom" @onclick="() => SelectItem(mod.id)">
+                    <span class="text-muted small">(@mod.id)</span>
+                    @mod.name
+                </button>
+            </li>
+        }
+    </ul>
+}
+
+@code {
+
+    [Parameter] public EventCallback<string> ResultSelected { get; set; }
+
+    private CancellationTokenSource cancellation = new();
+    private string value = string.Empty;
+    private (string id, string name)[] results = [];
+
+    private async Task HandleInput(ChangeEventArgs e)
+    {
+        try
+        {
+            value = e.Value?.ToString() ?? "";
+            cancellation.Cancel();
+            cancellation = new();
+            await Task.Delay(300, cancellation.Token);
+            Console.WriteLine(value);
+            results = [..await WorkshopAdapter
+                .Search(value, cancellation.Token)];
+        }
+        catch (TaskCanceledException) { /* Ignoré */ }
+    }
+
+    private async Task SelectItem(string id)
+    {
+        await ResultSelected.InvokeAsync(id);
+        results = [];
+        value = string.Empty;
+    }
+
+    private async Task HideResultsWithDelay()
+    {
+        // On attend un peu pour laisser le temps au clic de l'item d'être enregistré
+        await Task.Delay(200);
+        results = [];
+    }
+
+}

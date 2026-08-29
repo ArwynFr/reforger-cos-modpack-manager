@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="src/ArwynFr.Reforger.ModpackMgr.ServerConfig/ArwynFr.Reforger.ModpackMgr.ServerConfig.csproj" />
+  <Project Path="src/ArwynFr.Reforger.ModpackMgr.Workshop/ArwynFr.Reforger.ModpackMgr.Workshop.csproj" />
+  <Project Path="src/ArwynFr.Reforger.ModpackMgr/ArwynFr.Reforger.ModpackMgr.csproj" />
+</Solution>

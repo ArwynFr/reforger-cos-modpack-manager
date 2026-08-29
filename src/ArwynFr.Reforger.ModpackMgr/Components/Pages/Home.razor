@@ -1,0 +1,164 @@
+﻿@page "/"
+@using ArwynFr.Reforger.ModpackMgr.Components.Components
+@using ArwynFr.Reforger.ModpackMgr.Database
+@using ArwynFr.Reforger.ModpackMgr.Domain
+@using ArwynFr.Reforger.ModpackMgr.Workshop
+@using Microsoft.EntityFrameworkCore
+
+@rendermode InteractiveServer
+
+@inject IDbContextFactory<ModsDbContext> DbContextFactory
+@inject WorkshopItemRepository WorkshopItemRepository
+@inject ILogger<Home> Logger
+
+
+<PageTitle>Home</PageTitle>
+
+<h1>Modpack</h1>
+
+<div class="m-3">
+    <span class="mx-3 fst-italic">
+        Total size: @mods.Count mods, @ModpackSize
+    </span>
+    @foreach (var group in mods.Where(_ => _.Enabled).GroupBy(_ => _.Category).OrderBy(_ => _.Key))
+    {
+        <span class="badge rounded-pill bg-primary border mx-1">@group.Key: @FormatSize(group.Sum(_ => _.Size))</span>
+    }
+</div>
+
+<Search ResultSelected="Ajouter" />
+
+<div class="d-grid m-3">
+    <input type="button" class="btn btn-primary" value="Mettre à jour" @onclick="FetchAllWorshopInfo"
+           disabled="@updating" />
+</div>
+
+@if (updating)
+{
+    <div class="spinner-border text-primary mx-3" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th class="col-1"></th>
+            <th class="col-2">Id</th>
+            <th class="col-2">Name</th>
+            <th class="col-2">Category</th>
+            <th class="col-1">Version</th>
+            <th class="col-1">Game</th>
+            <th class="col-1">Size</th>
+            <th class="col-1">Enabled</th>
+            <th class="col-1"></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var mod in mods)
+        {
+            <ModItem @key="mod.Id" entity="@mod" Supprimer="Supprimer" OnDragStart="StartDrag" OnDrop="DropMod" OnTop="Top"/>
+        }
+    </tbody>
+</table>
+
+    
+
+@code {
+
+    private List<Mod> mods = [];
+
+    private bool updating = false;
+
+    private long? totalSize => mods.Where(_ => _.Enabled).Sum(_ => _.Size);
+
+    public string FormatSize(long? value) => value is null ? "- Go" : $"{Math.Round(value / 1073741824m ?? 0, 1,
+MidpointRounding.AwayFromZero)} Go";
+
+    public string ModpackSize => FormatSize(totalSize);
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = await DbContextFactory.CreateDbContextAsync(CancellationToken.None);
+        this.mods = await context.Mods.AsNoTrackingWithIdentityResolution()
+            .Include(_ => _.Dependants)
+            .Include(_ => _.Dependencies)
+            .OrderBy(_ => _.Order)
+            .ToListAsync(CancellationToken.None);
+    }
+
+    private async Task Supprimer(string id)
+    {
+        using var context = await DbContextFactory.CreateDbContextAsync(CancellationToken.None);
+        await context.Mods.Where(_ => _.Id == id).ExecuteDeleteAsync(CancellationToken.None);
+        await OnInitializedAsync();
+        StateHasChanged();
+    }
+
+    private async Task Ajouter(string id)
+    {
+        if (mods.Any(_ => _.Id == id)) { return; }
+        using var context = await DbContextFactory.CreateDbContextAsync(CancellationToken.None);
+        context.Mods.AttachRange(mods);
+        var entity = context.Mods.Add(new(id) { Enabled = true, Order = -1 }).Entity;
+        await entity.FetchWorkshopInformation(context.Mods, WorkshopItemRepository, CancellationToken.None);
+        await context.SaveChangesAsync();
+        await Reorder();
+        StateHasChanged();
+    }
+
+    private async Task FetchAllWorshopInfo(MouseEventArgs args)
+    {
+        updating = true;
+        StateHasChanged();
+        WorkshopItemRepository.Clear();
+        using var context = await DbContextFactory.CreateDbContextAsync(CancellationToken.None);
+        context.Mods.AttachRange(mods);
+        foreach (var mod in mods)
+        {
+            await mod.FetchWorkshopInformation(context.Mods, WorkshopItemRepository, CancellationToken.None);
+            await context.SaveChangesAsync(CancellationToken.None);
+        }
+
+        await Reorder();
+        updating = false;
+        StateHasChanged();
+    }
+
+    private Mod? dragSource;
+
+    private void StartDrag(Mod source)
+    {
+        this.dragSource = source;
+    }
+
+    private async Task DropMod(Mod target)
+    {
+        if (dragSource is not Mod source) { return; }
+        var target_index = mods.IndexOf(target);
+        mods.Remove(source);
+        mods.Insert(target_index, source);
+        await Reorder();
+    }
+
+    private async Task Reorder()
+    {
+        using var context = await DbContextFactory.CreateDbContextAsync(CancellationToken.None);
+        context.Mods.AttachRange(mods);
+        foreach (var mod in mods)
+        {
+            mod.Order = mods.IndexOf(mod);
+        }
+
+        await context.SaveChangesAsync(CancellationToken.None);
+        await OnInitializedAsync();
+        StateHasChanged();
+    }
+
+    private async Task Top(Mod mod)
+    {
+        mods.Remove(mod);
+        mods.Insert(0, mod);
+        await Reorder();
+    }
+}
