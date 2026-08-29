@@ -28,4 +28,8 @@
     <ProjectReference Include="..\ArwynFr.Reforger.ModpackMgr.Workshop\ArwynFr.Reforger.ModpackMgr.Workshop.csproj" />
   </ItemGroup>
 
+  <Target Name="BuildEfCoreMigrationBundle" AfterTargets="Publish">
+    <Exec Command="dotnet ef migrations bundle --self-contained -r linux-x64 --output $(PublishUrl)efbundle --force" />
+  </Target>
+
 </Project>
