@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}-application
+  labels:
+    {{- include "modpack-manager.labels" . | nindent 4 }}
+    app.kubernetes.io/component: application
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    external-dns.alpha.kubernetes.io/hostname: {{ .Values.hostname }}
+spec:
+  rules:
+  - host: {{ .Values.hostname }}
+    http:
+      paths:
+      - backend:
+          service:
+            name: {{ .Release.Name }}-application
+            port:
+              number: 8080
+        path: /
+        pathType: Prefix
+  tls:
+  - secretName: {{ .Release.Name }}-application-cert
+    hosts:
+    - {{ .Values.hostname }}
+    

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-application
+  labels:
+    {{- include "modpack-manager.labels" . | nindent 4 }}
+    app.kubernetes.io/component: application
+data:
+  ConnectionStrings__DefaultConnection: Data Source=/storage/personnels.sqlite
+  ReforgerWorkshop__BaseAddress: https://reforger.armaplatform.com/_next/data/7SR_7VK_nQhnsKqhQLzYE

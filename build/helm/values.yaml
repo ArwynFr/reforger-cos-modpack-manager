@@ -1,0 +1,17 @@
+productName: modpack-manager
+imageName: ghcr.io/arwynfr/reforger-cos-modpack-manager/modpack-manager
+hostname: 
+nfsServer: 
+runAsUser: 1654
+
+resources:
+  tempSizeLimit: 256Mi
+  homeSizeLimit: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+    storage: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+    storage: 1Gi

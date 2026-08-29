@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-application
+  labels:
+    {{- include "modpack-manager.labels" . | nindent 4 }}
+    app.kubernetes.io/component: application
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "modpack-manager.labels" . | nindent 6 }}
+      app.kubernetes.io/component: application
+  template:
+    metadata:
+      labels:
+        {{- include "modpack-manager.labels" . | nindent 8 }}
+        app.kubernetes.io/component: application
+    spec:
+      {{- include "modpack-manager.podSecurity" . | nindent 6 }}
+      containers:
+      - name: application
+        image: "{{ .Values.imageName }}:{{ .Chart.Version }}"
+        {{- include "modpack-manager.containerSecurity" . | nindent 8 }}
+        envFrom:
+        - configMapRef:
+            name: {{ .Release.Name }}-application
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        volumeMounts:
+        - name: storage
+          mountPath: /storage
+        - name: home
+          emptyDir:
+            sizeLimit: {{ .Values.resources.homeSizeLimit }}
+        - name: tmp
+          emptyDir:
+            sizeLimit: {{ .Values.resources.tempSizeLimit }}
+      initContainers:
+      - name: migration
+        image: "{{ .Values.imageName }}:{{ .Chart.Version }}"
+        {{- include "modpack-manager.containerSecurity" . | nindent 8 }}
+        command:
+        - /app/efbundle
+        envFrom:
+        - configMapRef:
+            name: {{ .Release.Name }}-application
+        volumeMounts:
+        - name: storage
+          mountPath: /storage
+        - name: home
+          emptyDir:
+            sizeLimit: {{ .Values.resources.homeSizeLimit }}
+        - name: tmp
+          emptyDir:
+            sizeLimit: {{ .Values.resources.tempSizeLimit }}
+      volumes:
+      - name: storage
+        nfs:
+          path: /srv/nfs/{{ .Release.Namespace }}/{{ .Release.Name }}
+          server: {{ .Values.nfsServer | quote }}

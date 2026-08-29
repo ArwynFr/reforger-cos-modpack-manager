@@ -1,0 +1,57 @@
+name: deployment
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+env:
+  OCI_REGISTRY: ghcr.io
+  DOCKER_IMAGE: modpack-manager
+  HELM_PACKAGE: modpack-manager-helm
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  deployment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🔓 Registry
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+        with:
+          registry: ${{ env.OCI_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: 🔨 Sources
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: 🔨 Version
+        run: build/version/New-ReleaseVersion.ps1
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: 🔨 Dotnet Tools
+        run: dotnet tool restore
+
+      - name: 📦 Helm chart
+        run: helm package build/helm --version ${VERSION}
+
+      - name: 🚀 Docker image
+        run: dotnet publish -t:PublishContainer
+        env:
+          ContainerRegistry: ${{ env.OCI_REGISTRY }}
+          ContainerRepository: ${{ github.repository }}/${{ env.DOCKER_IMAGE }}
+          ContainerImageTag: ${{ env.VERSION }}
+          Version: ${{ env.VERSION }}
+
+      - name: 🚀 Helm chart
+        run: helm push "${HELM_PACKAGE}-${VERSION}.tgz" "oci://${OCI_REGISTRY}/${GITHUB_REPOSITORY@L}"
+
+      - name: 📣 GH Release
+        run: gh release create ${VERSION} --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}
