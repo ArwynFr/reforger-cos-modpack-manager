@@ -1,7 +1,7 @@
 productName: modpack-manager
 imageName: ghcr.io/arwynfr/reforger-cos-modpack-manager/modpack-manager
 hostname: mods.gsri.team
-nfsServer: 5.135.158.195
+nfsServer: 51.77.150.76
 runAsUser: 1654
 
 resources:
