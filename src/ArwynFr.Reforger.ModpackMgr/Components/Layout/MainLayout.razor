@@ -1,4 +1,11 @@
-﻿@inherits LayoutComponentBase
+﻿@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inherits LayoutComponentBase
+
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IAuthorizationService AuthorizationService
 
 <div class="page">
     <div class="sidebar">
@@ -7,11 +14,19 @@
 
     <main>
         <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+            @if (username is not "")
+            {
+                <span> Bonjour @username </span>
+            }
+            <span class="px-4">
+                Version @System.Reflection.Assembly.GetEntryAssembly()!.GetName().Version!.ToString(3)
+            </span>
         </div>
 
         <article class="content px-4">
-            @Body
+            <fieldset @attributes="fieldsetAttributes">
+                @Body
+            </fieldset>
         </article>
     </main>
 </div>
@@ -21,3 +36,20 @@
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+
+@code
+{
+    private string username = string.Empty;
+    private Dictionary<string, object> fieldsetAttributes = [];
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        username = state.User.FindFirst(ClaimTypes.Name)?.Value ?? string.Empty;
+        fieldsetAttributes = await AuthorizationService
+            .AuthorizeAsync(state.User, SecurityConfiguration.ReadWritePolicyName) switch
+        {
+            { Succeeded: true } => [],
+            _ => new() { { "disabled", "disabled" } }
+        };
+    }
+}

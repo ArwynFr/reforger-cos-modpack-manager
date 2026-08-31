@@ -21,6 +21,7 @@ builder.Services.AddMemoryCache();
 GoogleAdapter.Register(builder);
 builder.Services.AddControllers();
 CustomControllerFeatureProvider.Register(builder);
+builder.AddSecurity();
 
 var app = builder.Build();
 

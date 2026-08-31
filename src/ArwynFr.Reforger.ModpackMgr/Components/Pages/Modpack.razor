@@ -1,18 +1,20 @@
-﻿@page "/"
+﻿@page "/modpack"
 @using ArwynFr.Reforger.ModpackMgr.Components.Components
 @using ArwynFr.Reforger.ModpackMgr.Database
 @using ArwynFr.Reforger.ModpackMgr.Domain
 @using ArwynFr.Reforger.ModpackMgr.Workshop
 @using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Authorization
 
 @rendermode InteractiveServer
+@attribute [Authorize]
 
 @inject IDbContextFactory<ModsDbContext> DbContextFactory
 @inject WorkshopItemRepository WorkshopItemRepository
-@inject ILogger<Home> Logger
+@inject ILogger<Modpack> Logger
 
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Modpack</PageTitle>
 
 <h1>Modpack</h1>
 
