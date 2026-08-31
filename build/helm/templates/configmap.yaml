@@ -6,5 +6,5 @@ metadata:
     {{- include "modpack-manager.labels" . | nindent 4 }}
     app.kubernetes.io/component: application
 data:
-  ConnectionStrings__DefaultConnection: Data Source=/storage/personnels.sqlite
+  ConnectionStrings__DefaultConnection: Data Source=/storage/mods.sqlite
   ReforgerWorkshop__BaseAddress: https://reforger.armaplatform.com/_next/data/7SR_7VK_nQhnsKqhQLzYE

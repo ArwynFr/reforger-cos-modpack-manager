@@ -25,6 +25,8 @@ spec:
         envFrom:
         - configMapRef:
             name: {{ .Release.Name }}-application
+        - secretRef:
+            name: {{ .Release.Name }}-application
         ports:
         - containerPort: 8080
           protocol: TCP
@@ -43,6 +45,8 @@ spec:
         - /app/efbundle
         envFrom:
         - configMapRef:
+            name: {{ .Release.Name }}-application
+        - secretRef:
             name: {{ .Release.Name }}-application
         volumeMounts:
         - name: storage

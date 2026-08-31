@@ -2,14 +2,17 @@
 @using ArwynFr.Reforger.ModpackMgr.Domain
 @using ArwynFr.Reforger.ModpackMgr.Workshop
 @using Microsoft.EntityFrameworkCore
-@using Microsoft.EntityFrameworkCore.Design
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
 
 @inject IDbContextFactory<ModsDbContext> DbContextFactory
 @inject WorkshopItemRepository WorkshopItemRepository
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IAuthorizationService AuthorizationService
 
-<tr draggable="true" @ondragstart="DragStart" @ondragover:preventDefault @ondrop="Drop">
+<tr draggable="@draggable.ToString()" @ondragstart="DragStart" @ondragover:preventDefault @ondrop="Drop">
     <td @onclick="ToggleDependencies">
-        <input type="button" class="btn mx-1" value="⬆️" @onclick="async () => await OnTop.InvokeAsync(entity)" />
+        <input type="button" class="btn mx-1 border-0" value="⬆️" @onclick="async () => await OnTop.InvokeAsync(entity)" />
         @if (missingDependencies.Any())
         {
             <input type="button" class="btn btn-sm btn-primary mx-3" value="+"
@@ -119,6 +122,7 @@
 }
 
 @code {
+    public bool draggable = false;
     public bool showDependencies = false;
     public bool isEditing = false;
     public bool isForced = false;
@@ -182,6 +186,10 @@
         dependencies = string.Join(", ", entity.Dependencies.Select(_ => _.Name));
         enabledDependants = string.Join(", ", entity.Dependants.Where(_ => _.Enabled).Select(_ => _.Name));
         missingDependencies = entity.Dependencies.Where(_ => _.Name == "").Select(_ => _.Id).ToArray();
+
+        draggable = await AuthenticationStateProvider.GetAuthenticationStateAsync() is AuthenticationState state
+                    && await AuthorizationService.AuthorizeAsync(state.User, SecurityConfiguration.ReadWritePolicyName)
+                    is { Succeeded: true };
     }
 
     public void StartEditing() => isEditing = true;
