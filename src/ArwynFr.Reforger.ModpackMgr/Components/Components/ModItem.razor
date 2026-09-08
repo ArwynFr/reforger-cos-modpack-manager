@@ -11,39 +11,9 @@
 @inject IAuthorizationService AuthorizationService
 
 <tr draggable="@draggable.ToString()" @ondragstart="DragStart" @ondragover:preventDefault @ondrop="Drop">
-    <td @onclick="ToggleDependencies">
-        <input type="button" class="btn mx-1 border-0" value="⬆️" @onclick="async () => await OnTop.InvokeAsync(entity)" />
-        @if (missingDependencies.Any())
-        {
-            <input type="button" class="btn btn-sm btn-primary mx-3" value="+"
-                   @onclick="() => AjouterDependances.InvokeAsync(missingDependencies)" />
-        }
-        @if (entity.Dependants.Any())
-        {
-            <span title="Ce mod est une dépendance" class="badge rounded-pill bg-success-subtle border">🔗</span>
-        }
-        else
-        {
-            <span title="Ce mod n'est pas une dépendance" class="badge rounded-pill bg-light text-muted border">🔗</span>
-        }
-        @if (entity.Dependencies.Any())
-        {
-            <span title="Ce mod dépend d'un autre mod" class="badge rounded-pill bg-success-subtle border">🔒</span>
-        }
-        else
-        {
-            <span title="Ce mod ne dépend d'aucun mod" class="badge rounded-pill bg-light text-muted border">🔒</span>
-        }
-        @if (entity.Dependencies.Any(_ => _.Order > entity.Order))
-        {
-            <span title="Attention ce mod est trié avant ses dépenances">⚠️</span>
-        }
-    </td>
     <td>
-        @entity.Id
-    </td>
-    <td>
-        @entity.Name
+        <p class="m-0">@entity.Name</p>
+        <p class="m-0 text-secondary small">@entity.Id</p>
     </td>
     <td @onclick="StartEditing" style="cursor: pointer;">
         @if (isEditing)
@@ -105,18 +75,90 @@
             }
         </div>
     </td>
+    <td @onclick="ToggleDependencies">
+        @if (entity.Dependencies.Any())
+        {
+            <span title="Ce mod dépend d'un autre mod" class="badge rounded-pill bg-success border">
+                🔗 @entity.Dependencies.Count
+            </span>
+        }
+        else
+        {
+            <span title="Ce mod ne dépend d'aucun mod" class="badge rounded-pill text-muted border">
+                🔗 0
+            </span>
+        }
+
+        @if (entity.Dependants.Any())
+        {
+            <span title="Ce mod est une dépendance" class="badge rounded-pill bg-success border">
+                🔒 @entity.Dependants.Count
+            </span>
+        }
+        else
+        {
+            <span title="Ce mod n'est pas une dépendance" class="badge rounded-pill text-muted border">
+                🔒 0
+            </span>
+        }
+
+        @if (entity.Dependencies.Any(_ => _.Order > entity.Order))
+        {
+            <span title="Attention ce mod est trié avant ses dépenances">⚠️</span>
+        }
+    </td>
     <td>
-        <button class=" btn btn-sm btn-danger" @onclick="() => Supprimer.InvokeAsync(entity.Id)">
-            Supprimer
+        <button class=" btn btn-sm btn-danger bg-danger" @onclick="() => Supprimer.InvokeAsync(entity.Id)">
+            ✘
         </button>
     </td>
 </tr>
 @if (showDependencies)
 {
     <tr>
-        <td colspan="7">
-            <p>Dependencies: @dependencies</p>
-            <p>Dependants: @dependants</p>
+        <td colspan="4">
+            <table class="table tables-striped">
+                <thead>
+                    <tr>
+                        <th>
+                            🔗 Dépendances (@entity.Dependencies.Count)
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var dependant in entity.Dependencies)
+                    {
+                        <tr>
+                            <td>
+                                <p class="m-0">@dependant.Name</p>
+                                <p class="m-0 text-secondary small">@dependant.Id</p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </td>
+        <td colspan="4">
+            <table class="table tables-striped">
+                <thead>
+                    <tr>
+                        <th>
+                            🔒 Dépendants (@entity.Dependants.Count)
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var dependant in entity.Dependants)
+                    {
+                        <tr>
+                            <td>
+                                <p class="m-0">@dependant.Name</p>
+                                <p class="m-0 text-secondary small">@dependant.Id</p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </td>
     </tr>
 }

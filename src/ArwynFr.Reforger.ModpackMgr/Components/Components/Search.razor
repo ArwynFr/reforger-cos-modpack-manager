@@ -2,7 +2,7 @@
 
 @inject WorkshopAdapter WorkshopAdapter
 
-<input type="text" class="form-control my-3" placeholder="Ajouter ..." @bind="value" @oninput="HandleInput"
+<input type="text" class="form-control my-3 dashboard-card" placeholder="🔍︎  Ajouter ..." @bind="value" @oninput="HandleInput"
        @onblur="HideResultsWithDelay" />
 
 @if (results.Any())
@@ -12,8 +12,8 @@
         {
             <li>
                 <button type="button" class="dropdown-item py-2 border-bottom" @onclick="() => SelectItem(mod.id)">
-                    <span class="text-muted small">(@mod.id)</span>
-                    @mod.name
+                    <p class="m-0">@mod.name</p>
+                    <p class="m-0 text-secondary small">@mod.id</p>
                 </button>
             </li>
         }
