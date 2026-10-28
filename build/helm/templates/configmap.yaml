@@ -7,4 +7,4 @@ metadata:
     app.kubernetes.io/component: application
 data:
   ConnectionStrings__DefaultConnection: Data Source=/storage/mods.sqlite
-  ReforgerWorkshop__BaseAddress: https://reforger.armaplatform.com/_next/data/7SR_7VK_nQhnsKqhQLzYE
+  ReforgerWorkshop__BaseAddress: https://reforger.armaplatform.com/_next/data/CbvxyH-9dL_K8vBnyFWp_
