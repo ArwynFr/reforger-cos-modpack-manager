@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ .Release.Name }}-database
+spec:
+  schedule: "@daily"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: sqlite
+              image: alpine/sqlite
+              imagePullPolicy: Always
+              command:
+                - /bin/sh
+                - -c
+                - /usr/bin/sqlite3 /storage/mods.sqlite ".backup /storage/backup-$(date +\%Y-\%m-\%d).sqlite"
+              volumeMounts:
+                - name: storage
+                  mountPath: /storage
+          restartPolicy: OnFailure
+          volumes:
+            - name: storage
+              hostPath:
+                path: /srv/nfs/{{ .Release.Namespace }}/{{ .Release.Name }}
+                type: DirectoryOrCreate
