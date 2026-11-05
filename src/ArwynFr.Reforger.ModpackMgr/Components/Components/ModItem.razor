@@ -186,7 +186,7 @@
     private string BadgeClass => entity.GameVersion switch
     {
         { Major: > 1 } => "text-bg-success",
-        { Major: 1, Minor: >= 8 } => "text-bg-success",
+        { Major: 1, Minor: >= 9 } => "text-bg-success",
         _ => "text-bg-warning"
     };
 
